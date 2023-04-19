@@ -2,114 +2,84 @@
 import numpy as np
 import openai
 import pandas as pd
+import csv
+import pickle
 
 #storing private key in a file that won't be synced to github
-from config import OPENAI_API_KEY 
+from config import OPENAI_API_KEY, EMBEDDING_MODEL, COMPLETIONS_MODEL
 
-COMPLETIONS_MODEL = "text-davinci-003"
-EMBEDDING_MODEL = "text-embedding-ada-002"
-
+from openai_functions import compute_doc_embeddings, order_document_sections_by_query_similarity, construct_prompt
 
 openai.organization = "org-h2tLuOD0WsmSH4extTGzgOXU" #this is identical to other organization keys. this is fine to share
 openai.api_key = OPENAI_API_KEY
 openai.Model.list()
 
-
-df = pd.read_csv('first_1000.csv')
-
-df['idx'] = [None] * len(df)
-
-
-# print(f"{len(df)} rows in the data.")
-# print(df.sample(5))
-
-# test_string = "You happen to know that Tim and Harry have recently had a terrible row that ended their friendship. Now someone tells you that she just saw Tim and Harry jogging together. The best explanation for this that you can think of is that they made up. You conclude that they are friends again."
-# test_embed = get_embedding(test_string)
-# print(len(test_embed))
-
-small_df = df.iloc[:30] #this will just have the first 5 rows 
-small_df['idx'] = [None] * len(small_df)
+COMPLETIONS_API_PARAMS = {
+    # We use temperature of 0.0 because it gives the most predictable, factual answer.
+    "temperature": .0,
+    "max_tokens": 500,
+    "model": COMPLETIONS_MODEL,
+}
 
 
-prev = None
-curr = ""
-index = 0
+df = pd.read_csv('FULL_DATA_new.csv')
 
-for _, r in df.iterrows():
+#we want a unique numbered index for each paragraph in the entire dataset
+df = df.rename(columns={'Unnamed: 0': 'index'})
+# this will be the key that the dictionary returns
+# df = df.set_index(["title", "section", "subsection", "p_number", "index"])
 
-    curr = r.subsection
 
-    #added str() to account for NAN since nan != nan
-    if str(curr) == str(prev):
-        index +=1
-        r.idx = index
+# Here is an example. I will ask a question about abduction, and a small section of the dataset
+# will be embedded. The most similar 5 paragraphs will be appended to the question as context. 
+
+run_example = True
+load_embeddings = True
+if run_example:
+
+    small_df = df.iloc[:50] #this will just have the first 30 rows
+    small_df = small_df.set_index(["title", "section", "subsection", "p_number", "index"])
+
+
+    if load_embeddings:
         
+        with open('saved_dictionary.pkl', 'rb') as f:
+            doc_embeddings = pickle.load(f)
     else:
-        index = 0
-        r.idx = index
+        doc_embeddings = compute_doc_embeddings(small_df)
+        with open('saved_dictionary.pkl', 'wb') as f:
+            pickle.dump(doc_embeddings, f)
+            
 
-    prev = curr
-    # print(r.text)
+    pass
+    pass
 
-df = df.set_index(["title", "section", "subsection", "idx"])
+    #NEED TO SAVE THE DOC EMBEDDINGS!
 
-pass
-pass
+    # OUT is a dictionary, with complex keys:
+    # out['Abduction', '1. Abduction: The General Idea', '1.2 The ubiquity of abduction', 8]
 
-def get_embedding(text: str, model: str=EMBEDDING_MODEL):
-    result = openai.Embedding.create(
-      model=model,
-      input=text
-    )
-    return result["data"][0]["embedding"]
+    question = "Explain abduction, and how it is different than induction or deduction."
+    #print the most similar ones
 
-def compute_doc_embeddings(df: pd.DataFrame): #-> dict[tuple[str, str], list[float]]
-    """
-    Create an embedding for each row in the dataframe using the OpenAI Embeddings API.
-    
-    Return a dictionary that maps between each embedding vector and the index of the row that it corresponds to.
-    """
-    return {
-        idx: get_embedding(r.text) for idx, r in df.iterrows()
-    }
+    # out_example = order_document_sections_by_query_similarity(question, doc_embeddings)[:5]
+    # print(out_example)
 
-def vector_similarity(x, y):
-    """
-    Returns the similarity between two vectors.
-    
-    Because OpenAI Embeddings are normalized to length 1, the cosine similarity is the same as the dot product.
-    """
-    return np.dot(np.array(x), np.array(y))
+    prompt = construct_prompt(question, doc_embeddings, small_df)
 
-def order_document_sections_by_query_similarity(query: str, contexts):
-    """
-    Find the query embedding for the supplied query, and compare it against all of the pre-calculated document embeddings
-    to find the most relevant sections. 
-    
-    Return the list of document sections, sorted by relevance in descending order.
-    """
-    query_embedding = get_embedding(query)
-    
-    document_similarities = sorted([
-        (vector_similarity(query_embedding, doc_embedding), doc_index) for doc_index, doc_embedding in contexts.items()
-    ], reverse=True)
-    
-    return document_similarities
-
-doc_embeddings = compute_doc_embeddings(df[:30])
+    #SAMPLE PROMPT:
+    prompt_sample = """'Answer the question as truthfully as possible using the provided context, and if the answer is not contained within the text below, say "I don\'t know."\n\nContext:\n\n*  Abduction is normally thought of as being one of three major types of inference, the other two being deduction and induction. The distinction between deduction, on the one hand, and induction and abduction, on the other hand, corresponds to the distinction between necessary and non-necessary inferences. In deductive inferences, what is inferred is necessarily true if the premises from which it is inferred are true; that is, the truth of the premises guarantees the truth of the conclusion. A familiar type of example is inferences instantiating the schema\n*  A noteworthy feature of abduction, which it shares with induction but not with deduction, is that it violates monotonicity, meaning that it may be possible to infer abductively certain conclusions from a subset of a set S of premises which cannot be inferred abductively from S as a whole. For instance, adding the premise that Tim and Harry are former business partners who still have some financial matters to discuss, to the premises that they had a terrible row some time ago and that they were just seen jogging together may no longer warrant you to infer that they are friends again, even if—let us suppose—the last two premises alone do warrant that inference. The reason is that what counts as the best explanation of Tim and Harry’s jogging together in light of the original premises may no longer do so once the information has been added that they are former business partners with financial matters to discuss.\n\n Q: Explain abduction, and how it is different than induction or deduction.\n A:'"""
+    print("===\n", prompt)
 
 
-print(doc_embeddings)
-
-# OUT is a dictionary, with complex keys:
-# out['Abduction', '1. Abduction: The General Idea', '1.2 The ubiquity of abduction', 8]
+prompt_sample = """'Answer the question as truthfully as possible using the provided context, and if the answer is not contained within the text below, say "I don\'t know."\n\nContext:\n\n*  Abduction is normally thought of as being one of three major types of inference, the other two being deduction and induction. The distinction between deduction, on the one hand, and induction and abduction, on the other hand, corresponds to the distinction between necessary and non-necessary inferences. In deductive inferences, what is inferred is necessarily true if the premises from which it is inferred are true; that is, the truth of the premises guarantees the truth of the conclusion. A familiar type of example is inferences instantiating the schema\n*  A noteworthy feature of abduction, which it shares with induction but not with deduction, is that it violates monotonicity, meaning that it may be possible to infer abductively certain conclusions from a subset of a set S of premises which cannot be inferred abductively from S as a whole. For instance, adding the premise that Tim and Harry are former business partners who still have some financial matters to discuss, to the premises that they had a terrible row some time ago and that they were just seen jogging together may no longer warrant you to infer that they are friends again, even if—let us suppose—the last two premises alone do warrant that inference. The reason is that what counts as the best explanation of Tim and Harry’s jogging together in light of the original premises may no longer do so once the information has been added that they are former business partners with financial matters to discuss.\n\n Q: Explain abduction, and how it is different than induction or deduction.\n A:'"""
 
 
+response = openai.Completion.create(
+                prompt=prompt_sample,
+                **COMPLETIONS_API_PARAMS
+            )
 
-order_document_sections_by_query_similarity("Hilary Putnam’s book Reason, Truth, and History", doc_embeddings)[:5]
+print(response["choices"][0]["text"].strip(" \n"))
 
-
-
-pass
-pass
-
+result_example = """Abduction is a type of inference that is non-necessary, meaning that the truth of the premises does not guarantee the truth of the conclusion. It is different from induction and deduction in that it violates monotonicity, meaning that it may be possible to infer certain conclusions from a subset of a set of premises which cannot be inferred from the set as a whole."""
