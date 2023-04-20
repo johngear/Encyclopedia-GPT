@@ -24,7 +24,7 @@ with open(path_pkl, 'rb') as f:
     doc_embeddings = pickle.load(f)
 
 # NEED TO LOAD the dataset so that the paragraphs can be returned with the dictionary
-df = pd.read_csv('data/FULL_DATA_new.csv')
+df = pd.read_csv('data/FULL_DATA_short.csv')
 df = df.rename(columns={'Unnamed: 0': 'index'})
 small_df = df.iloc[:1000] #this will just have the first X rows
 small_df = small_df.set_index(["title", "section", "subsection", "p_number", "index"])
@@ -34,7 +34,7 @@ while True:
     # question = "Please compare abduction to Bayesian Confirmation Theory"
     question = input("Ask a philosophy related question! ")
 
-    if question == "Exit":
+    if question == "Exit" or "exit":
         break
     prompt_sample = construct_prompt(question, doc_embeddings, small_df)
 
