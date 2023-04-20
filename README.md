@@ -25,3 +25,5 @@ First, using the OpenAI API, I computed ~1141 embeddings (each embeddings is for
 It cost 5 cents
 
 The full, cleaned dataset is a CSV file with 164,300 rows, where each row is a paragraph. Then: It SHOULD cost $6 for the full embedding of the dataset, which is great! I was worried this would be like $100.
+
+Unfortunately, the embedding process is pretty slow, although only needs to be done once. 1000 paragraphs took 5 minutes! Meaning, the total time could be upwards of 13 hours to get all the embeddings :/

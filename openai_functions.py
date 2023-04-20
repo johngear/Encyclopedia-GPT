@@ -98,6 +98,7 @@ def construct_prompt(question: str, context_embeddings: dict, df: pd.DataFrame) 
     # Useful diagnostic information
     print(f"Selected {len(chosen_sections)} document sections:")
     print("\n".join(chosen_sections_indexes))
+    print("\n\n")
     
     header = """Answer the question as truthfully as possible using the provided context, and if the answer is not contained within the text below, say "I don't know."\n\nContext:\n"""
     
