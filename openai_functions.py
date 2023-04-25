@@ -8,7 +8,8 @@ import openai
 import numpy as np
 import tiktoken
 
-from config import EMBEDDING_MODEL
+EMBEDDING_MODEL = "text-embedding-ada-002"
+
 
 def get_embedding(text: str, model: str=EMBEDDING_MODEL):
     result = openai.Embedding.create(
@@ -74,7 +75,7 @@ ENCODING = "gpt2"  # encoding for text-davinci-003
 encoding = tiktoken.get_encoding(ENCODING)
 separator_len = len(encoding.encode(SEPARATOR))
 
-def construct_prompt(question: str, context_embeddings: dict, df: pd.DataFrame) -> str:
+def construct_prompt(question: str, context_embeddings: dict, df: pd.DataFrame):
     """
     Fetch relevant 
     """

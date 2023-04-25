@@ -3,26 +3,28 @@ import pandas as pd
 import pickle
 import streamlit as st
 
+
 # st.write("whats up idk")
 
 # x = st.slider('x')  # 👈 this is a widget
 # st.write(x, 'squared is', x * x)
 
-from config import OPENAI_API_KEY, COMPLETIONS_MODEL
+# from config import OPENAI_API_KEY, COMPLETIONS_MODEL
+COMPLETIONS_MODEL = "text-davinci-003"
 
 from openai_functions import construct_prompt
 
 @st.cache_data
 def load_params():
     openai.organization = "org-h2tLuOD0WsmSH4extTGzgOXU" #this is identical to other organization keys. this is fine to share
-    openai.api_key = OPENAI_API_KEY
+    openai.api_key = st.secrets["OPENAI_API_KEY"]
     openai.Model.list()
 
     COMPLETIONS_API_PARAMS = {
         # We use temperature of 0.0 because it gives the most predictable, factual answer.
         "temperature": .0,
         "max_tokens": 500,
-        "model": COMPLETIONS_MODEL,
+        "model": COMPLETIONS_MODEL
     }
 
     return COMPLETIONS_API_PARAMS
