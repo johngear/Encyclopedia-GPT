@@ -83,6 +83,7 @@ def construct_prompt(question: str, context_embeddings: dict, df: pd.DataFrame) 
     chosen_sections = []
     chosen_sections_len = 0
     chosen_sections_indexes = []
+    chosen_sections_array = []
      
     for _, section_index in most_relevant_document_sections:
         # Add contexts until we run out of space.        
@@ -94,12 +95,15 @@ def construct_prompt(question: str, context_embeddings: dict, df: pd.DataFrame) 
             
         chosen_sections.append(SEPARATOR + document_section.text.replace("\n", " "))
         chosen_sections_indexes.append(str(section_index))
+        chosen_sections_array.append(section_index)
             
     # Useful diagnostic information
     print(f"Selected {len(chosen_sections)} document sections:")
     print("\n".join(chosen_sections_indexes))
     print("\n\n")
+
+    # num_selected_sections = len(chosen_sections)
     
     header = """Answer the question as truthfully as possible using the provided context, and if the answer is not contained within the text below, say "I don't know."\n\nContext:\n"""
     
-    return header + "".join(chosen_sections) + "\n\n Q: " + question + "\n A:"
+    return header + "".join(chosen_sections) + "\n\n Q: " + question + "\n A:", chosen_sections_array
