@@ -12,11 +12,10 @@ openai.Model.list()
 
 COMPLETIONS_API_PARAMS = {
     # We use temperature of 0.0 because it gives the most predictable, factual answer.
-    "temperature": .0,
+    "temperature": .2,
     "max_tokens": 500,
     "model": COMPLETIONS_MODEL,
 }
-
 
 #LOAD THE EMBEDDINGS FROM A PKL FILE
 path_pkl = "data/first_1000_embeddings.pkl"
@@ -34,9 +33,9 @@ while True:
     # question = "Please compare abduction to Bayesian Confirmation Theory"
     question = input("Ask a philosophy related question! ")
 
-    if question == "Exit" or "exit":
+    if question == "Exit" or question == "exit":
         break
-    prompt_sample = construct_prompt(question, doc_embeddings, small_df)
+    prompt_sample, _ = construct_prompt(question, doc_embeddings, small_df)
 
     response = openai.Completion.create(
                     prompt=prompt_sample,
@@ -44,5 +43,3 @@ while True:
                 )
 
     print(response["choices"][0]["text"].strip(" \n"))
-
-    
