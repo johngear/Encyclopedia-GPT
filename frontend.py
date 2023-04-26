@@ -2,12 +2,11 @@ import openai
 import pandas as pd
 import pickle
 import streamlit as st
+from PIL import Image
 
 
-# st.write("whats up idk")
-
-# x = st.slider('x')  # 👈 this is a widget
-# st.write(x, 'squared is', x * x)
+# Dictionary where the OpenAI API key is:
+# /Users/johngearig/.streamlit/secrets.toml
 
 # from config import OPENAI_API_KEY, COMPLETIONS_MODEL
 COMPLETIONS_MODEL = "text-davinci-003"
@@ -15,14 +14,14 @@ COMPLETIONS_MODEL = "text-davinci-003"
 from openai_functions import construct_prompt
 
 @st.cache_data
-def load_params():
+def load_params(temp_in):
     openai.organization = "org-h2tLuOD0WsmSH4extTGzgOXU" #this is identical to other organization keys. this is fine to share
     openai.api_key = st.secrets["OPENAI_API_KEY"]
     openai.Model.list()
 
     COMPLETIONS_API_PARAMS = {
         # We use temperature of 0.0 because it gives the most predictable, factual answer.
-        "temperature": .0,
+        "temperature": temp_in,
         "max_tokens": 500,
         "model": COMPLETIONS_MODEL
     }
@@ -57,23 +56,40 @@ def answer_question(question: str) -> str:
     return out, extra_info
 # START THE Q&A PROCESS
 
-COMPLETIONS_API_PARAMS = load_params()
+# temp = st.slider('temperature', 0.0, 1.0)
+temp=0
+
+COMPLETIONS_API_PARAMS = load_params(temp)
 doc_embeddings, small_df = load_dataset()
 
+st.title("Philosophy GPT")
+st.caption("A Q&A tool trained on the Stanford Encyclopedia of Philosophy, and using OpenAI's GPT3 completion API")
+st.divider()
+
 # question = "Please compare abduction to Bayesian Confirmation Theory"
+# question_from_website = "Please compare abduction to Bayesian Confirmation Theory"
 
-question_from_website = st.text_input("Ask a Philosophy related question! ")
+##DEBUG
+question_from_website = st.text_input("Ask a philosophy related question! ",max_chars=200)
+# question_from_website = "what is abduction?"
 
-question, context = answer_question(question_from_website)
-st.write(question)
+if len(question_from_website) > 0:
+    answer, context = answer_question(question_from_website)
+    st.write(answer)
+    st.write("Here's what was referenced:")
+    df = pd.DataFrame(context)
+    df.columns = ["Article", "Section", "Subsection", "Paragraph Number", "idx"]
+    st.write(df.iloc[:,:4])
+else:
+    pic = Image.open("static/athens_zoomed.jpeg")
+    st.image(pic)
 
 
-st.write("Here's what we referenced:")
-# st.write(pd.DataFrame({
-#     'first column': ["Article", "Section", "Subsection", "Paragraph Number"],
-#     'secasdffd column': [context[0][0], context[0][1], context[0][2], context[0][3]]
-# }))
 
-df = pd.DataFrame(context)
-df.columns = ["Article", "Section", "Subsection", "Paragraph Number", "idx"]
-st.write(df)
+## remove some of the stuff at the bottom.
+hide_streamlit_style = """
+            <style>
+            footer {visibility: hidden;}
+            </style>
+            """ #can add: #MainMenu {visibility: hidden;}
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
