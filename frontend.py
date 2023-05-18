@@ -31,15 +31,17 @@ def load_params(temp_in):
 @st.cache_data
 def load_dataset():
     #LOAD THE EMBEDDINGS FROM A PKL FILE
-    path_pkl = "data/first_1000_embeddings.pkl"
+    path_pkl = "data/first_100_embeddings.pkl"
     with open(path_pkl, 'rb') as f:
         doc_embeddings = pickle.load(f)
 
     # NEED TO LOAD the dataset so that the paragraphs can be returned with the dictionary
     df = pd.read_csv('data/FULL_DATA_short.csv')
     df = df.rename(columns={'Unnamed: 0': 'index'})
-    small_df = df.iloc[:1000] #this will just have the first X rows
-    small_df = small_df.set_index(["title", "section", "subsection", "p_number", "index"])
+
+    ##need to change this one
+    small_df = df.iloc[:100] #this will just have the first X rows
+    small_df = small_df.set_index(["title", "shorturl", "section", "subsection", "p_number", "index"])
 
     return doc_embeddings, small_df
 
@@ -73,17 +75,33 @@ st.divider()
 question_from_website = st.text_input("Ask a philosophy related question! ",max_chars=200)
 # question_from_website = "what is abduction?"
 
+sep_url = "https://plato.stanford.edu/entries/"
+
+
 if len(question_from_website) > 0:
     answer, context = answer_question(question_from_website)
     st.write(answer)
+    st.divider()
     st.write("Here's what was referenced:")
     df = pd.DataFrame(context)
-    df.columns = ["Article", "Section", "Subsection", "Paragraph Number", "idx"]
-    st.write(df.iloc[:,:4])
+    df.columns = ["Article", "shorturl", "Section", "Subsection", "Paragraph Number", "idx"]
+
+
+    #display all of the articles used in Context
+    st.write(df.iloc[:,[0,1,2,3,4]])
+
+    # generate hyperlinks 
+   
+    urls = df["shorturl"].unique()
+    st.write("Links to source articles:")
+    for url in urls:
+        st.markdown(f"""[SEP article about {url.capitalize()}]({sep_url}{url})
+                    """)
+    
+#display a landing picture
 else:
     pic = Image.open("static/athens_zoomed.jpeg")
     st.image(pic)
-
 
 
 ## remove some of the stuff at the bottom.

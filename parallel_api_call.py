@@ -6,8 +6,8 @@ start = time.time()
 
 command_line_request_str = f"""/opt/anaconda3/bin/python \
     /Users/johngearig/Documents/GitHub/Encyclopedia-GPT/api_request_parallel_processor.py \
-  --requests_filepath data/full_data/idx_partial_dataset.jsonl \
-  --save_filepath data/full_data/1000_parallel.jsonl \
+  --requests_filepath data/full_data/full_info_full_dataset.jsonl \
+  --save_filepath data/full_data/FULL_INFO_PARALLEL.jsonl \
   --request_url https://api.openai.com/v1/embeddings \
   --max_requests_per_minute 1500 \
   --max_tokens_per_minute 6250000 \

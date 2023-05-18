@@ -47,9 +47,21 @@ def order_document_sections_by_query_similarity(query: str, contexts):
     """
     query_embedding = get_embedding(query)
     
+    #TRYING SOMEHTING NEW
     document_similarities = sorted([
         (vector_similarity(query_embedding, doc_embedding), doc_index) for doc_index, doc_embedding in contexts.items()
     ], reverse=True)
+
+    # document_similarities = sorted([
+    #     (vector_similarity(query_embedding, doc_embedding), doc_index) 
+    #     if all(isinstance(val, (int, float)) for val in doc_embedding) 
+    #     else (float(0), doc_index)
+    #     for doc_index, doc_embedding in contexts.items()
+    # ], reverse=True)
+
+    # document_similarities = sorted([
+    #     (vector_similarity(query_embedding, doc_embedding), doc_index) for doc_index, doc_embedding in contexts.items()
+    # ], reverse=True)
     
     return document_similarities
 
@@ -85,9 +97,7 @@ def construct_prompt(question: str, context_embeddings: dict, df: pd.DataFrame):
     chosen_sections_len = 0
     chosen_sections_indexes = []
     chosen_sections_array = []
-     
     for _, section_index in most_relevant_document_sections:
-        # Add contexts until we run out of space.        
         document_section = df.loc[section_index]
         
         chosen_sections_len += len(document_section.text) + separator_len
