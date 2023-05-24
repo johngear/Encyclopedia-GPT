@@ -4,4 +4,4 @@ openai
 pickle-mixin
 streamlit
 tiktoken
-faiss
+faiss-cpu
