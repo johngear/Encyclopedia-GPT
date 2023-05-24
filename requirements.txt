@@ -4,3 +4,4 @@ openai
 pickle-mixin
 streamlit
 tiktoken
+faiss
