@@ -17,7 +17,7 @@ This is what is being fed into the model:
     
 The project took the form of a few stages.
 
-1. A substantial one time data cleaning project to get the dataset into a usable form ('read_pq_and_clean_pq.py')
+1. A substantial one time data cleaning project to get the dataset into a usable form (`read_pq_and_clean_pq.py`)
 2. Making a terminal-operated prototype with a partial dataset ('backend.py', 'openai_functions.py')
 3. Testing the prototype with a Streamlit Deployed Frontend ('frontend.py')
 4. Embedding the entire dataset with parallelization (parallel_api_call.py) and cleaning the output ('read_jsonl.py')
