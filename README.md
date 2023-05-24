@@ -18,21 +18,21 @@ This is what is being fed into the model:
 The project took the form of a few stages.
 
 1. A substantial one time data cleaning project to get the dataset into a usable form (`read_pq_and_clean_pq.py`)
-2. Making a terminal-operated prototype with a partial dataset ('backend.py', 'openai_functions.py')
-3. Testing the prototype with a Streamlit Deployed Frontend ('frontend.py')
-4. Embedding the entire dataset with parallelization (parallel_api_call.py) and cleaning the output ('read_jsonl.py')
-5. Fixing speed bottlenecks with the entire dataset by adding a better search function ('UPDATED_openai_functions.py', 'timing.py')
+2. Making a terminal-operated prototype with a partial dataset (`backend.py`, `openai_functions.py`)
+3. Testing the prototype with a Streamlit Deployed Frontend (`frontend.py`)
+4. Embedding the entire dataset with parallelization (parallel_api_call.py) and cleaning the output (`read_jsonl.py`)
+5. Fixing speed bottlenecks with the entire dataset by adding a better search function (`UPDATED_openai_functions.py`, `timing.py`)
 6. (**CURRENT**) Fixing Streamlit runtime speed (currently taking 5x as long as terminal)
 
 # Data Cleaning
-'read_pq_and_clean_pq.py' is where I clean the data. This file is well commented. HuggingFace (https://huggingface.co/datasets/hugfaceguy0001/stanford_plato) has the entire SEP, but the part of the dataset that had the entire article text, was in a strange format. This was tedious. 
+`read_pq_and_clean_pq.py` is where I clean the data. This file is well commented. HuggingFace (https://huggingface.co/datasets/hugfaceguy0001/stanford_plato) has the entire SEP, but the part of the dataset that had the entire article text, was in a strange format. This was tedious. 
 
 I split this and saved to a CSV, with each row having the title, section, subsection, paragraph #, full paragraph text, url and publish date. 
 
 #TODO There is probably a better way to do this, where paragraphs are concatenated together if they are short, as to avoid single-line paragraphs and account for the variety of author's writing styles.
 
 # Prototype:
-Using the first 1000 paragraphs, you can prompt GPT via backend.py. This program sets up all of the OpenAI API calls, loads all of the data needed, constructs the prompt, and answers the question. It has some latency, taking a noticeable few seconds to answer, but reasonable IMO. This is using the off-the-shelf 'openai_functions.py', which are slow due to dictionary usage and slow sorting algorithms. 
+Using the first 1000 paragraphs, you can prompt GPT via backend.py. This program sets up all of the OpenAI API calls, loads all of the data needed, constructs the prompt, and answers the question. It has some latency, taking a noticeable few seconds to answer, but reasonable IMO. This is using the off-the-shelf `openai_functions.py`, which are slow due to dictionary usage and slow sorting algorithms. 
 
 Here is what it looks like: 
 
@@ -58,7 +58,7 @@ First, using the OpenAI API, I computed ~1141 embeddings (each embeddings is for
 
 The full, cleaned dataset is a CSV file with 164,300 rows, where each row is a paragraph. Then: It SHOULD cost $6 for the full embedding of the dataset, which is great! **UPDATE** It cost $10, which is a more than expected, but reasonable.
 
-Unfortunately, the embedding process is pretty slow, although only needs to be done once. 1000 paragraphs took 5 minutes! Meaning, the total time could be upwards of 13 hours to get all the embeddings. Doing some digging, OpenAI has a program called api_request_parallel_processor.py which speeds up the requests rapidly. Still, it took approximately 2 hours for it to complete. 'parallel_api_call.py' is 
+Unfortunately, the embedding process is pretty slow, although only needs to be done once. 1000 paragraphs took 5 minutes! Meaning, the total time could be upwards of 13 hours to get all the embeddings. Doing some digging, OpenAI has a program called api_request_parallel_processor.py which speeds up the requests rapidly. Still, it took approximately 2 hours for it to complete. `parallel_api_call.py` is 
 
 # Speed Issues
 This is the most daunting task now. I haven't really optimized for speed thus far, but with all of the dataset, it is substantially slower to the point where it isn't usable presently. OpenAI docs suggest the use of dictionaries as I have. Right now there is the issue of loading in the embeddings (30 seconds!).
@@ -71,7 +71,7 @@ I seems like the primary problem is with the dictionary data structure, which I'
 ### Fix!
 The issue was twofold: first, with loading the embeddings, then with finding the most similar embeddings to append as context. 
 
-For loading the embeddings, saving them as a massive pickled numpy array was an easy fix that I had always thought I was going to implement. For the vector search, the functions provided by OpenAI were sorting every element in the dictionary of embeddings by it's dot product similarity and returning the whole dictionary. This is immensely slow-- first we don't need to return all of the embeddings, just a handful of the most relevant. And second, there is no need to calculate the dot product for 160,000 vectors every time. Instead, I used FAISS (facebook ai similarity search) which excels in high dimension vector searching. faiss.IndexFlatIP() creates an index of the dataset and allows to search based on Inner Product (dot product, or cosine similarity when normalized to 1, as our data is). Then, I had to trace these changes and their repercussions through the program and created UPDATED_openai_functions.py which includes the big changes.
+For loading the embeddings, saving them as a massive pickled numpy array was an easy fix that I had always thought I was going to implement. For the vector search, the functions provided by OpenAI were sorting every element in the dictionary of embeddings by it's dot product similarity and returning the whole dictionary. This is immensely slow-- first we don't need to return all of the embeddings, just a handful of the most relevant. And second, there is no need to calculate the dot product for 160,000 vectors every time. Instead, I used FAISS (facebook ai similarity search) which excels in high dimension vector searching. `faiss.IndexFlatIP()` creates an index of the dataset and allows to search based on Inner Product (dot product, or cosine similarity when normalized to 1, as our data is). Then, I had to trace these changes and their repercussions through the program and created UPDATED_openai_functions.py which includes the big changes.
 
 Now, the dataset loads in ~3 seconds, prompts are constructed in ~4 seconds, and the API call takes another ~2 seconds. Overall, this isn't lightning fast, but seems within the acceptable range of use for a specialized Q&A tool.
 
