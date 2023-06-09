@@ -1,8 +1,9 @@
-## WORK IN PROGRESS
+![alt text](https://github.com/johngear/Encyclopedia-GPT/blob/main/static/athens_zoomed.jpeg)
+
 
 I am writing software to prompt GPT (or any language model with a nice API) to answer Philosophy questions with reference to the Stanford Encyclopedia of Philosophy-- one of the best online resources!. 
 
-Currently, this is working with one of OpenAI's off-the-shelf completion models, "text-davinci-003", where better prompting can give us better answers than fine tuning can. It doesn't give better factual recall from large datasets, which is our goal here.
+Currently, this is working with one of OpenAI's off-the-shelf completion models, "text-davinci-003", where better prompting can give us better answers than fine tuning can. But doesn't give better factual recall from large datasets, which is our goal here.
 
 By better prompting, I am basing much of this off the OpenAI cookbook (https://github.com/openai/openai-cookbook/blob/main/examples/Question_answering_using_embeddings.ipynb), specifically, the pre-GPT3.5 push, which substantially changed some of the code. 
 
@@ -23,6 +24,7 @@ The project took the form of a few stages.
 4. Embedding the entire dataset with parallelization (parallel_api_call.py) and cleaning the output (`read_jsonl.py`)
 5. Fixing speed bottlenecks with the entire dataset by adding a better search function (`UPDATED_openai_functions.py`, `timing.py`)
 6. (**CURRENT**) Fixing Streamlit runtime speed (currently taking 5x as long as terminal)
+7. (**CURRENT**) Looking at different scalable cloud providers and spinning up some VMs with Docker
 
 # Data Cleaning
 `read_pq_and_clean_pq.py` is where I clean the data. This file is well commented. HuggingFace (https://huggingface.co/datasets/hugfaceguy0001/stanford_plato) has the entire SEP, but the part of the dataset that had the entire article text, was in a strange format. This was tedious. 
