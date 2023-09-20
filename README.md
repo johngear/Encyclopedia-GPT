@@ -1,5 +1,7 @@
 ![alt text](https://github.com/johngear/Encyclopedia-GPT/blob/main/static/athens_zoomed.jpeg)
 
+## You can use the tool at https://philosophy-chat.com 
+Recent changes are in private repos for deployment.
 
 I am writing software to prompt GPT (or any language model with a nice API) to answer Philosophy questions with reference to the Stanford Encyclopedia of Philosophy-- one of the best online resources!. 
 
